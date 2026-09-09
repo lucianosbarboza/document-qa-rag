@@ -51,4 +51,6 @@ def answer_question(question: str, chunks: list[Chunk]) -> str:
             }
         ],
     )
-    return message.content[0].text
+    # Find the text block rather than assuming content[0] is it -- Claude
+    # can prepend a thinking block before the actual answer.
+    return next(block.text for block in message.content if block.type == "text")

@@ -88,21 +88,56 @@ Re-run `ingest.py` whenever you add or change PDFs in `data/`.
 > looks wrong, run `chcp 65001` first or use Windows Terminal/PowerShell,
 > which handle UTF-8 by default.
 
+## Evaluation
+
+Instead of eyeballing answer quality, `eval.py` runs the full pipeline
+against a fixed set of Q&A pairs (`eval/dataset.json`) and scores each
+answer with four RAGAS-style metrics, implemented from scratch using
+Claude as an LLM judge (plus the local embedding model for one of them):
+
+- **faithfulness** -- of the claims in the answer, what fraction are
+  actually supported by the retrieved context? (catches hallucination)
+- **answer_relevancy** -- does the answer address the question asked?
+  (generates candidate questions from the answer, compares them to the
+  real question via embedding similarity)
+- **context_precision** -- of the retrieved chunks, what fraction are
+  actually relevant? (rank-weighted, like average precision)
+- **context_recall** -- does the retrieved context contain everything
+  needed to reconstruct the reference answer? (catches retrieval gaps)
+
+```bash
+python eval.py                                    # run eval/dataset.json
+python eval.py --dataset eval/my_dataset.json --top-k 3 --out eval/results.json
+```
+
+Each question needs a `reference_answer` in the dataset (used to judge
+context precision/recall) -- see `eval/dataset.json` for the format.
+`eval/last_run.json` is a sample run against this repo's test PDF.
+
+This turns "did I make the retriever better?" from a guess into a
+number you can compare across chunk sizes, alpha values, or a future
+re-ranker.
+
 ## Project layout
 
 ```
 document-qa-rag/
 ├── data/            # put your PDFs here (gitignored)
 ├── index/           # generated index (gitignored)
+├── eval/
+│   ├── dataset.json     # Q&A pairs with reference answers, for eval.py
+│   └── last_run.json    # sample eval.py output
 ├── src/
 │   ├── chunking.py    # splits page text into overlapping chunks
 │   ├── bm25.py         # BM25 keyword scoring, implemented from scratch
 │   ├── embeddings.py   # local dense embeddings (sentence-transformers)
 │   ├── retrieval.py    # combines BM25 + dense scores into one ranking
 │   ├── store.py        # saves/loads the on-disk index
-│   └── generate.py     # calls Claude with retrieved context + citation rules
+│   ├── generate.py     # calls Claude with retrieved context + citation rules
+│   └── eval_metrics.py # RAGAS-style eval metrics (LLM-as-judge, from scratch)
 ├── ingest.py        # build the index from data/*.pdf
-└── ask.py           # interactive Q&A CLI
+├── ask.py           # interactive Q&A CLI
+└── eval.py          # scores answer quality against eval/dataset.json
 ```
 
 ## What this teaches (mapped to the pipeline)
@@ -121,7 +156,8 @@ document-qa-rag/
 - Add re-ranking of the top-k results with a cross-encoder
 - Try contextual chunking (prepend a short LLM-generated summary of the
   surrounding document to each chunk before embedding)
-- Add an eval harness (e.g. a small set of Q&A pairs + RAGAS) to measure
-  answer quality instead of eyeballing it
+- ~~Add an eval harness (e.g. a small set of Q&A pairs + RAGAS) to
+  measure answer quality instead of eyeballing it~~ -- done, see
+  [Evaluation](#evaluation) above
 - Support Slack/Notion as additional sources (as in the original project
   brief), not just PDF

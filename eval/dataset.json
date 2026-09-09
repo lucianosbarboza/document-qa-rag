@@ -1,0 +1,34 @@
+[
+  {
+    "question": "Qual é o torque de inserção mínimo indicado para favorecer função ou carga imediata?",
+    "reference_answer": "Um torque de inserção maior ou igual a 35 N·cm favorece função ou carga imediata em casos selecionados."
+  },
+  {
+    "question": "Qual faixa de ISQ (RFA) sugere estabilidade adequada para protocolos acelerados?",
+    "reference_answer": "Um ISQ (RFA) maior ou igual a 65-70 sugere estabilidade adequada para protocolos acelerados."
+  },
+  {
+    "question": "Quais são os quatro tipos de enxertos ósseos classificados por origem, segundo o artigo?",
+    "reference_answer": "Os enxertos ósseos são classificados, conforme sua origem, em autógenos, alógenos, xenógenos e aloplásticos."
+  },
+  {
+    "question": "Por que o enxerto autógeno é considerado o padrão-ouro em regeneração óssea?",
+    "reference_answer": "O enxerto autógeno é obtido do próprio paciente e apresenta propriedades osteogênicas, osteoindutivas e osteocondutivas, sendo por isso considerado o padrão-ouro em regeneração óssea, embora exija um segundo sítio cirúrgico e envolva maior morbidade."
+  },
+  {
+    "question": "Quais são as duas categorias principais de complicações em implantes osseointegrados?",
+    "reference_answer": "As complicações em implantes osseointegrados são geralmente divididas em biológicas, que envolvem os tecidos ao redor do implante (como a peri-implantite), e mecânicas, relacionadas aos componentes do sistema protético (como afrouxamento ou fratura de parafusos)."
+  },
+  {
+    "question": "O que é peri-implantite e quais fatores aumentam seu risco?",
+    "reference_answer": "Peri-implantite é uma inflamação de origem infecciosa que compromete os tecidos ao redor do implante, resultando em perda óssea progressiva. O acúmulo de biofilme, histórico de periodontite, tabagismo, diabetes não controlado e ausência de mucosa queratinizada aumentam significativamente o risco."
+  },
+  {
+    "question": "Quanto tempo dura, em geral, o período de osseointegração após a cirurgia no protocolo convencional de duas fases?",
+    "reference_answer": "O período de osseointegração varia, em geral, de três a seis meses, dependendo das condições ósseas e sistêmicas do paciente, podendo ser estendido em casos com enxertos ósseos."
+  },
+  {
+    "question": "Quais bases de dados foram usadas na busca de artigos para esta revisão de literatura?",
+    "reference_answer": "A busca por artigos científicos foi realizada nas bases de dados Google Scholar, Scopus e Web of Science."
+  }
+]
