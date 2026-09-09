@@ -16,6 +16,18 @@ class Chunk:
     source: str   # filename the chunk came from
     page: int     # 1-indexed page number (for citations)
     chunk_id: int  # position within the whole corpus
+    context: str = ""  # optional LLM-generated blurb situating this chunk
+    # within its document (see src/contextualize.py); used only for
+    # retrieval, never shown to the user or passed to the generation step
+
+    @property
+    def indexed_text(self) -> str:
+        """Text actually fed to BM25 + the embedding model. Identical to
+        `text` unless contextual chunking has filled in `context`, in
+        which case that context is prepended -- e.g. a chunk that just
+        says "The success rate was 87%" becomes much easier to retrieve
+        once it's paired with what "the" refers to."""
+        return f"{self.context}\n\n{self.text}" if self.context else self.text
 
 
 def chunk_text(

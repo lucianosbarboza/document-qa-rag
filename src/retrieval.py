@@ -35,7 +35,9 @@ class HybridRetriever:
         self.chunks = chunks
         self.embeddings = embeddings
         self.alpha = alpha
-        self.bm25 = BM25([c.text for c in chunks])
+        # indexed_text == text unless contextual chunking (src/contextualize.py)
+        # filled in chunk.context -- this stays a no-op for plain chunks.
+        self.bm25 = BM25([c.indexed_text for c in chunks])
 
     def search(self, query: str, top_k: int = 5) -> list[tuple[Chunk, float]]:
         bm25_scores = np.array(self.bm25.score(query))

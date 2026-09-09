@@ -1,0 +1,74 @@
+[
+  {
+    "question": "Qual é o torque de inserção mínimo indicado para favorecer função ou carga imediata?",
+    "answer": "Não sei. Os excertos fornecidos não especificam um valor de torque de inserção mínimo para favorecer função ou carga imediata; eles apenas mencionam a necessidade de \"estabilidade primária adequada\" sem indicar um número específico [1][2][4].",
+    "reference_answer": "Um torque de inserção maior ou igual a 35 N·cm favorece função ou carga imediata em casos selecionados.",
+    "faithfulness": 1.0,
+    "answer_relevancy": 0.814,
+    "context_precision": 0.0,
+    "context_recall": 0.0
+  },
+  {
+    "question": "Qual faixa de ISQ (RFA) sugere estabilidade adequada para protocolos acelerados?",
+    "answer": "Uma faixa de ISQ (RFA) ≥ 65–70 sugere estabilidade adequada para protocolos acelerados [1].",
+    "reference_answer": "Um ISQ (RFA) maior ou igual a 65-70 sugere estabilidade adequada para protocolos acelerados.",
+    "faithfulness": 1.0,
+    "answer_relevancy": 0.699,
+    "context_precision": 0.7,
+    "context_recall": 1.0
+  },
+  {
+    "question": "Quais são os quatro tipos de enxertos ósseos classificados por origem, segundo o artigo?",
+    "answer": "Segundo o artigo, os enxertos ósseos são classificados por origem em quatro tipos [1]:\n\n1. **Autógeno** – obtido do próprio paciente, com propriedades osteogênicas, osteoindutivas e osteocondutivas, considerado o padrão-ouro em regeneração óssea, podendo ser coletado de áreas intraorais (sínfise mentoniana, ramo mandibular) ou extraorais (crista ilíaca) [3].\n\n2. **Alógeno** – proveniente de doadores da mesma espécie, processado em bancos de tecidos, com ação predominantemente osteocondutiva e menor potencial osteoindutivo [3].\n\n3. **Xenógeno** – derivado de outras espécies (geralmente bovina ou suína), passando por desproteinização, biocompatível e osteocondutivo, porém com reabsorção mais lenta [3][5].\n\n4. **Aloplástico** – constituído por materiais sintéticos, como hidroxiapatita, β-fosfato tricálcico e biovidros, com excelente biocompatibilidade e ação osteocondutiva [5].",
+    "reference_answer": "Os enxertos ósseos são classificados, conforme sua origem, em autógenos, alógenos, xenógenos e aloplásticos.",
+    "faithfulness": 1.0,
+    "answer_relevancy": 0.757,
+    "context_precision": 0.804,
+    "context_recall": 1.0
+  },
+  {
+    "question": "Por que o enxerto autógeno é considerado o padrão-ouro em regeneração óssea?",
+    "answer": "O enxerto autógeno é considerado o padrão-ouro em regeneração óssea porque, sendo obtido do próprio paciente, apresenta propriedades osteogênicas, osteoindutivas e osteocondutivas [1][2], características que reúnem o máximo potencial regenerativo entre os tipos de enxerto disponíveis [4]. Apesar dessa vantagem biológica, seu uso implica maior morbidade, já que exige um segundo sítio cirúrgico para a coleta do material, seja em áreas intraorais (como sínfise mentoniana e ramo mandibular) ou extraorais (como crista ilíaca) [1][2][4].",
+    "reference_answer": "O enxerto autógeno é obtido do próprio paciente e apresenta propriedades osteogênicas, osteoindutivas e osteocondutivas, sendo por isso considerado o padrão-ouro em regeneração óssea, embora exija um segundo sítio cirúrgico e envolva maior morbidade.",
+    "faithfulness": 1.0,
+    "answer_relevancy": 0.822,
+    "context_precision": 0.917,
+    "context_recall": 1.0
+  },
+  {
+    "question": "Quais são as duas categorias principais de complicações em implantes osseointegrados?",
+    "answer": "As duas categorias principais são as complicações **biológicas**, que envolvem os tecidos ao redor do implante, e as **mecânicas**, relacionadas aos componentes do sistema protético [1].",
+    "reference_answer": "As complicações em implantes osseointegrados são geralmente divididas em biológicas, que envolvem os tecidos ao redor do implante (como a peri-implantite), e mecânicas, relacionadas aos componentes do sistema protético (como afrouxamento ou fratura de parafusos).",
+    "faithfulness": 1.0,
+    "answer_relevancy": 0.826,
+    "context_precision": 0.7,
+    "context_recall": 0.8
+  },
+  {
+    "question": "O que é peri-implantite e quais fatores aumentam seu risco?",
+    "answer": "A peri-implantite é uma inflamação de origem infecciosa que compromete os tecidos ao redor do implante, resultando em perda óssea progressiva [1].\n\nOs fatores que aumentam significativamente o risco de desenvolvimento dessa condição incluem: acúmulo de biofilme, histórico de periodontite, tabagismo, diabetes não controlado e ausência de mucosa queratinizada [1]. Além disso, o histórico de periodontite é destacado como um fator que gera maior risco de peri-implantite, exigindo controle periodontal intensivo e manutenção frequente [2][5].",
+    "reference_answer": "Peri-implantite é uma inflamação de origem infecciosa que compromete os tecidos ao redor do implante, resultando em perda óssea progressiva. O acúmulo de biofilme, histórico de periodontite, tabagismo, diabetes não controlado e ausência de mucosa queratinizada aumentam significativamente o risco.",
+    "faithfulness": 1.0,
+    "answer_relevancy": 0.813,
+    "context_precision": 0.95,
+    "context_recall": 1.0
+  },
+  {
+    "question": "Quanto tempo dura, em geral, o período de osseointegração após a cirurgia no protocolo convencional de duas fases?",
+    "answer": "O período de osseointegração dura, em geral, de três a seis meses, dependendo das condições ósseas e sistêmicas do paciente, podendo ser estendido em casos específicos como na presença de enxertos ósseos [1].",
+    "reference_answer": "O período de osseointegração varia, em geral, de três a seis meses, dependendo das condições ósseas e sistêmicas do paciente, podendo ser estendido em casos com enxertos ósseos.",
+    "faithfulness": 1.0,
+    "answer_relevancy": 0.694,
+    "context_precision": 1.0,
+    "context_recall": 1.0
+  },
+  {
+    "question": "Quais bases de dados foram usadas na busca de artigos para esta revisão de literatura?",
+    "answer": "As bases de dados utilizadas foram Google Scholar, Scopus e Web of Science [1][3].",
+    "reference_answer": "A busca por artigos científicos foi realizada nas bases de dados Google Scholar, Scopus e Web of Science.",
+    "faithfulness": 1.0,
+    "answer_relevancy": 0.719,
+    "context_precision": 0.833,
+    "context_recall": 1.0
+  }
+]

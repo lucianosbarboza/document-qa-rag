@@ -88,6 +88,40 @@ Re-run `ingest.py` whenever you add or change PDFs in `data/`.
 > looks wrong, run `chcp 65001` first or use Windows Terminal/PowerShell,
 > which handle UTF-8 by default.
 
+## Contextual chunking (optional)
+
+Plain chunking throws away surrounding context: a chunk that says "The
+success rate was 87%" is nearly impossible for BM25 or an embedding
+model to match to a query like "implant survival rate", since it never
+says *what* had an 87% success rate.
+
+Contextual chunking (the technique Anthropic calls [Contextual
+Retrieval](https://www.anthropic.com/news/contextual-retrieval)) asks
+Claude to write a short 1-2 sentence blurb situating each chunk within
+its full document, and prepends that blurb only to the copy of the
+chunk that gets indexed (BM25 + embeddings) -- the original chunk text
+and citations shown to the user are untouched (`src/contextualize.py`,
+`Chunk.indexed_text`). The whole document is sent as a cached prompt
+prefix, so the cost is one Claude call per chunk, most of it billed at
+the (much cheaper) cache-read rate rather than full price each time.
+
+It's opt-in because of that extra cost/latency:
+
+```bash
+python ingest.py --contextual
+```
+
+**Measured result on this repo's test corpus:** running `eval.py`
+before and after contextual chunking (`eval/last_run.json` vs.
+`eval/last_run_contextual.json`) showed no clear improvement here --
+context_precision and context_recall were actually slightly lower,
+answer_relevancy slightly higher, all within the noise of an 8-question,
+single-document eval set. That tracks: contextual chunking mainly helps
+when chunks are ambiguous *relative to other chunks* -- across many
+documents, or many sections covering similar topics. A single 23-page
+paper on one subject doesn't have much of that ambiguity to fix. Worth
+re-measuring if you point this at a larger, more heterogeneous corpus.
+
 ## Evaluation
 
 Instead of eyeballing answer quality, `eval.py` runs the full pipeline
@@ -125,16 +159,18 @@ document-qa-rag/
 ├── data/            # put your PDFs here (gitignored)
 ├── index/           # generated index (gitignored)
 ├── eval/
-│   ├── dataset.json     # Q&A pairs with reference answers, for eval.py
-│   └── last_run.json    # sample eval.py output
+│   ├── dataset.json            # Q&A pairs with reference answers, for eval.py
+│   ├── last_run.json           # sample eval.py output (plain chunking)
+│   └── last_run_contextual.json # sample eval.py output (--contextual)
 ├── src/
-│   ├── chunking.py    # splits page text into overlapping chunks
-│   ├── bm25.py         # BM25 keyword scoring, implemented from scratch
-│   ├── embeddings.py   # local dense embeddings (sentence-transformers)
-│   ├── retrieval.py    # combines BM25 + dense scores into one ranking
-│   ├── store.py        # saves/loads the on-disk index
-│   ├── generate.py     # calls Claude with retrieved context + citation rules
-│   └── eval_metrics.py # RAGAS-style eval metrics (LLM-as-judge, from scratch)
+│   ├── chunking.py       # splits page text into overlapping chunks
+│   ├── contextualize.py  # optional: LLM-generated per-chunk context (ingest.py --contextual)
+│   ├── bm25.py            # BM25 keyword scoring, implemented from scratch
+│   ├── embeddings.py      # local dense embeddings (sentence-transformers)
+│   ├── retrieval.py       # combines BM25 + dense scores into one ranking
+│   ├── store.py           # saves/loads the on-disk index
+│   ├── generate.py        # calls Claude with retrieved context + citation rules
+│   └── eval_metrics.py    # RAGAS-style eval metrics (LLM-as-judge, from scratch)
 ├── ingest.py        # build the index from data/*.pdf
 ├── ask.py           # interactive Q&A CLI
 └── eval.py          # scores answer quality against eval/dataset.json
@@ -154,8 +190,10 @@ document-qa-rag/
 
 - Swap the pickle-based store for a real vector DB (Chroma, Qdrant)
 - Add re-ranking of the top-k results with a cross-encoder
-- Try contextual chunking (prepend a short LLM-generated summary of the
-  surrounding document to each chunk before embedding)
+- ~~Try contextual chunking (prepend a short LLM-generated summary of the
+  surrounding document to each chunk before embedding)~~ -- done, see
+  [Contextual chunking](#contextual-chunking-optional) above (though it
+  didn't measurably help on this small single-document corpus)
 - ~~Add an eval harness (e.g. a small set of Q&A pairs + RAGAS) to
   measure answer quality instead of eyeballing it~~ -- done, see
   [Evaluation](#evaluation) above
