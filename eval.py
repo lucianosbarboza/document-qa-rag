@@ -65,8 +65,8 @@ def main() -> None:
     args = parser.parse_args()
 
     dataset = json.loads(args.dataset.read_text(encoding="utf-8"))
-    chunks, embeddings = load_index()
-    retriever = HybridRetriever(chunks, embeddings)
+    chunks, collection = load_index()
+    retriever = HybridRetriever(chunks, collection)
 
     metric_names = ["faithfulness", "answer_relevancy", "context_precision", "context_recall"]
     rows = []

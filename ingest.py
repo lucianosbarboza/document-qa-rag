@@ -82,7 +82,7 @@ def main() -> None:
     embeddings = embed([c.indexed_text for c in all_chunks])
 
     save_index(all_chunks, embeddings)
-    print(f"Done. Index saved to index/index.pkl ({len(all_chunks)} chunks).")
+    print(f"Done. Index saved to index/chroma/ ({len(all_chunks)} chunks).")
 
 
 if __name__ == "__main__":

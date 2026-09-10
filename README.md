@@ -24,15 +24,15 @@ PDF files (data/)
  embed each chunk (src/embeddings.py, local sentence-transformers model)
       |
       v
- save chunks + embeddings to disk (src/store.py)  <-- python ingest.py
+ save chunks + embeddings to Chroma (src/store.py)  <-- python ingest.py
 
 
 Your question
       |
       v
- BM25 keyword score (src/bm25.py)  ---\
-                                        +--> combined hybrid ranking (src/retrieval.py)
- dense embedding cosine score       ---/
+ BM25 keyword score, in memory (src/bm25.py)      ---\
+                                                        +--> combined hybrid ranking (src/retrieval.py)
+ dense nearest-neighbor search via Chroma           ---/
       |
       v
  top-k chunks --> Claude, forced to cite excerpt numbers (src/generate.py)
@@ -52,6 +52,22 @@ embeddings endpoint, so this project uses a small open model
 (`sentence-transformers/all-MiniLM-L6-v2`) running on your machine.
 Claude is used only for the generation step. This also means indexing
 is free and works offline.
+
+**Why Chroma?** The index started as a pickle file (fine for a handful
+of PDFs, but everything had to fit in memory and every query re-scored
+every chunk by hand). Chroma is an embedded vector database -- no
+server to run, it just writes to `index/chroma/` -- so it keeps the
+"nothing to host, works offline" property the local embedding model was
+chosen for, while doing what a vector DB is actually for: real
+approximate-nearest-neighbor search, so the dense half of retrieval
+doesn't need every embedding held in Python memory to answer one query.
+BM25 still needs the whole corpus in memory regardless -- its IDF
+statistics are a global property of the corpus, vector DB or not -- so
+`src/bm25.py` is unchanged. Hybrid search now works as a two-stage
+fusion: BM25 and Chroma each nominate their own top candidates, and only
+that combined pool gets re-scored together (`src/retrieval.py`) -- the
+standard pattern for combining a keyword and a vector index, rather
+than the original's brute-force score-everything approach.
 
 ## Setup
 
@@ -167,8 +183,8 @@ document-qa-rag/
 │   ├── contextualize.py  # optional: LLM-generated per-chunk context (ingest.py --contextual)
 │   ├── bm25.py            # BM25 keyword scoring, implemented from scratch
 │   ├── embeddings.py      # local dense embeddings (sentence-transformers)
-│   ├── retrieval.py       # combines BM25 + dense scores into one ranking
-│   ├── store.py           # saves/loads the on-disk index
+│   ├── retrieval.py       # fuses BM25 candidates + Chroma's dense search into one ranking
+│   ├── store.py           # saves/loads the Chroma-backed index
 │   ├── generate.py        # calls Claude with retrieved context + citation rules
 │   └── eval_metrics.py    # RAGAS-style eval metrics (LLM-as-judge, from scratch)
 ├── ingest.py        # build the index from data/*.pdf
@@ -181,14 +197,17 @@ document-qa-rag/
 - **Chunking strategy** and why overlap matters
 - **Sparse retrieval**: BM25 scoring implemented by hand (term frequency,
   IDF, length normalization)
-- **Dense retrieval**: semantic embeddings + cosine similarity
-- **Hybrid search**: normalizing and blending two different score scales
+- **Dense retrieval**: semantic embeddings + a real vector database
+  (Chroma) doing approximate-nearest-neighbor search
+- **Hybrid search**: fusing two independent candidate pools (BM25's and
+  the vector DB's) and normalizing/blending their scores
 - **Grounded generation**: prompting an LLM to answer *only* from
   provided context and cite its sources, to reduce hallucination
 
 ## Ideas to extend (next difficulty tier)
 
-- Swap the pickle-based store for a real vector DB (Chroma, Qdrant)
+- ~~Swap the pickle-based store for a real vector DB (Chroma, Qdrant)~~ --
+  done: Chroma, embedded (no server), see `src/store.py`
 - Add re-ranking of the top-k results with a cross-encoder
 - ~~Try contextual chunking (prepend a short LLM-generated summary of the
   surrounding document to each chunk before embedding)~~ -- done, see

@@ -26,8 +26,8 @@ load_dotenv()
 
 
 def main() -> None:
-    chunks, embeddings = load_index()
-    retriever = HybridRetriever(chunks, embeddings)
+    chunks, collection = load_index()
+    retriever = HybridRetriever(chunks, collection)
 
     print(f"Loaded index with {len(chunks)} chunks. Ask a question (or 'quit').\n")
 
