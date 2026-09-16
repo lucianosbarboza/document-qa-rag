@@ -6,3 +6,4 @@ venv/
 index/
 data/*.pdf
 !data/.gitkeep
+!data/implantes-dentarios-revisao-bibliografica.pdf

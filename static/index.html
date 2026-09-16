@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Document Q&amp;A</title>
+<link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+<main>
+  <h1>Document Q&amp;A</h1>
+  <p class="sub">Ask a question about the indexed document. Answers are grounded in retrieved excerpts, with citations.</p>
+
+  <form id="ask-form">
+    <input id="question" type="text" placeholder="Ask a question..." autocomplete="off" required />
+    <button type="submit">Ask</button>
+  </form>
+
+  <div id="status" class="status" hidden></div>
+
+  <section id="result" hidden>
+    <div class="answer" id="answer"></div>
+    <details id="sources-wrap">
+      <summary>Sources</summary>
+      <ul id="sources"></ul>
+    </details>
+  </section>
+</main>
+<script src="/static/app.js"></script>
+</body>
+</html>

@@ -104,6 +104,45 @@ Re-run `ingest.py` whenever you add or change PDFs in `data/`.
 > looks wrong, run `chcp 65001` first or use Windows Terminal/PowerShell,
 > which handle UTF-8 by default.
 
+## Web UI / API
+
+The same pipeline is also exposed over HTTP, so it can be demoed in a
+browser instead of a terminal (`api.py` calls the exact same
+`src/retrieval.py` + `src/generate.py` functions as `ask.py`).
+
+```bash
+uvicorn api:app --reload
+```
+
+Open http://127.0.0.1:8000/ for a small chat-style front end
+(`static/`), or call the API directly:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/ask \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What is osseointegration?"}'
+```
+
+Returns `{"answer": "...", "sources": [{"source", "page", "score"}, ...]}`.
+
+### Deploying (Render)
+
+`render.yaml` defines a free-tier web service: its build step installs
+dependencies and runs `python ingest.py` (so the index is rebuilt fresh
+on each deploy from the PDF committed in `data/`), then starts uvicorn.
+To deploy:
+
+1. Push this repo to GitHub (already done).
+2. On [Render](https://render.com), New → Blueprint → point at this repo
+   (it picks up `render.yaml` automatically).
+3. Set the `ANTHROPIC_API_KEY` environment variable in the Render
+   dashboard (not committed -- `render.yaml` marks it `sync: false`).
+
+A `Procfile` is also included for Railway or any other Procfile-based
+host (`web: uvicorn api:app --host 0.0.0.0 --port $PORT`); on Railway,
+add a custom build command of `pip install -r requirements.txt &&
+python ingest.py` since it doesn't read `render.yaml`.
+
 ## Contextual chunking (optional)
 
 Plain chunking throws away surrounding context: a chunk that says "The
@@ -172,8 +211,9 @@ re-ranker.
 
 ```
 document-qa-rag/
-├── data/            # put your PDFs here (gitignored)
+├── data/            # put your PDFs here (gitignored, except the demo PDF)
 ├── index/           # generated index (gitignored)
+├── static/          # front end for api.py (index.html, style.css, app.js)
 ├── eval/
 │   ├── dataset.json            # Q&A pairs with reference answers, for eval.py
 │   ├── last_run.json           # sample eval.py output (plain chunking)
@@ -189,7 +229,10 @@ document-qa-rag/
 │   └── eval_metrics.py    # RAGAS-style eval metrics (LLM-as-judge, from scratch)
 ├── ingest.py        # build the index from data/*.pdf
 ├── ask.py           # interactive Q&A CLI
-└── eval.py          # scores answer quality against eval/dataset.json
+├── api.py           # FastAPI backend (same pipeline, over HTTP)
+├── eval.py          # scores answer quality against eval/dataset.json
+├── Procfile         # for Railway / other Procfile-based hosts
+└── render.yaml       # Render blueprint (build + start commands, env var)
 ```
 
 ## What this teaches (mapped to the pipeline)
@@ -218,3 +261,5 @@ document-qa-rag/
   [Evaluation](#evaluation) above
 - Support Slack/Notion as additional sources (as in the original project
   brief), not just PDF
+- ~~Expose the pipeline over HTTP (FastAPI) with a simple web front end,
+  and deploy it~~ -- done, see [Web UI / API](#web-ui--api) above
