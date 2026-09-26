@@ -2,7 +2,7 @@
 
 A from-scratch Retrieval-Augmented Generation (RAG) pipeline that answers
 questions about your own PDFs, with citations back to the exact
-source/page. Built as a beginner-level portfolio project covering the
+source/page. Built as a portfolio project covering the
 full RAG stack: chunking, hybrid retrieval (BM25 + dense embeddings),
 and grounded generation.
 
