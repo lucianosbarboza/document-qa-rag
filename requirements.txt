@@ -1,8 +1,11 @@
 anthropic>=0.40.0
 pypdf>=4.0.0
-sentence-transformers>=3.0.0
 numpy>=1.26.0
 python-dotenv>=1.0.0
+# chromadb also pulls in onnxruntime + tokenizers, which is how
+# src/embeddings.py runs all-MiniLM-L6-v2 locally. That's deliberate:
+# sentence-transformers/PyTorch used to be listed here, and its memory
+# footprint is what made the free-tier deploy die with an OOM.
 chromadb>=1.0.0
 fastapi>=0.110.0
 uvicorn[standard]>=0.29.0

@@ -31,18 +31,60 @@ from .embeddings import embed
 from .generate import get_client, MODEL
 
 
-def _call_json(system: str, user: str):
-    """Call Claude and parse its reply as JSON, tolerating stray code
-    fences or prose around the JSON object/array."""
-    message = get_client().messages.create(
-        model=MODEL,
-        max_tokens=1024,
-        system=system + "\n\nRespond with ONLY valid JSON. No prose, no code fences.",
-        messages=[{"role": "user", "content": user}],
-    )
-    raw = next(block.text for block in message.content if block.type == "text").strip()
+class JudgeReplyError(RuntimeError):
+    """The judge never returned parseable JSON, even after a retry."""
+
+
+def _extract_json(raw: str):
+    """Parse a JSON object/array out of the judge's reply, tolerating
+    stray code fences or prose around it."""
     match = re.search(r"[\[{].*[\]}]", raw, re.DOTALL)
     return json.loads(match.group(0) if match else raw)
+
+
+def _call_json(system: str, user: str, attempts: int = 2):
+    """Call Claude and parse its reply as JSON.
+
+    An LLM judge is still an LLM: it occasionally emits *almost* JSON --
+    most often an unescaped double quote inside a phrase it is quoting
+    back from the source text. One malformed reply used to abort the
+    whole eval run partway through, throwing away every question already
+    scored, so instead we hand the bad reply back and ask it to fix
+    itself. (Same tolerate-the-judge philosophy as `_fraction_true`
+    below.) If it still will not parse, raise an error that shows what
+    actually came back, rather than a bare JSONDecodeError from deep in
+    the stack.
+    """
+    system = system + "\n\nRespond with ONLY valid JSON. No prose, no code fences."
+    messages = [{"role": "user", "content": user}]
+    for attempt in range(attempts):
+        message = get_client().messages.create(
+            model=MODEL,
+            max_tokens=2048,
+            system=system,
+            messages=messages,
+        )
+        raw = next(block.text for block in message.content if block.type == "text").strip()
+        try:
+            return _extract_json(raw)
+        except ValueError as exc:  # json.JSONDecodeError subclasses ValueError
+            if attempt == attempts - 1:
+                raise JudgeReplyError(
+                    f"judge did not return valid JSON after {attempts} attempt(s) "
+                    f"({exc}). Last reply was:\n{raw[:500]}"
+                ) from exc
+            messages = messages + [
+                {"role": "assistant", "content": raw},
+                {
+                    "role": "user",
+                    "content": (
+                        f"That was not valid JSON ({exc}). A likely cause is an "
+                        "unescaped double quote inside a string value. Resend the "
+                        "same content as valid JSON only, escaping inner quotes "
+                        "or rephrasing to avoid them."
+                    ),
+                },
+            ]
 
 
 def _build_context(chunks: list[Chunk]) -> str:

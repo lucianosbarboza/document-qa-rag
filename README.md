@@ -21,7 +21,7 @@ PDF files (data/)
  split into overlapping chunks (src/chunking.py)
       |
       v
- embed each chunk (src/embeddings.py, local sentence-transformers model)
+ embed each chunk (src/embeddings.py, local MiniLM model via ONNX)
       |
       v
  save chunks + embeddings to Chroma (src/store.py)  <-- python ingest.py
@@ -49,9 +49,26 @@ production RAG systems actually do.
 
 **Why local embeddings?** Anthropic's API doesn't currently expose an
 embeddings endpoint, so this project uses a small open model
-(`sentence-transformers/all-MiniLM-L6-v2`) running on your machine.
-Claude is used only for the generation step. This also means indexing
-is free and works offline.
+(`all-MiniLM-L6-v2`) running on your machine. Claude is used only for
+the generation step. This also means indexing is free and works
+offline.
+
+The model runs on **onnxruntime** rather than PyTorch. It started on
+`sentence-transformers`, which is the obvious choice locally -- but
+that pulls in PyTorch (~550MB installed, and a heavy resident
+footprint just to import), and importing it is what killed the first
+free-tier deploy with `Out of memory (used over 512Mi)` before the
+server could even bind its port. Chroma already ships the same MiniLM
+weights exported to ONNX and already depends on `onnxruntime` (~45MB),
+so switching to it dropped ~670MB of dependencies while keeping the
+identical model and the same 384-dimension normalized vectors.
+
+This was verified rather than assumed: embedding the whole test corpus
+both ways gives a cosine similarity of **1.0000** between the two
+models' vectors (mean and minimum alike), and hybrid retrieval returns
+the **identical top-5 chunks for all 8 eval questions**. Retrieval
+quality is unchanged; only the dependency footprint is. See
+`src/embeddings.py`.
 
 **Why Chroma?** The index started as a pickle file (fine for a handful
 of PDFs, but everything had to fit in memory and every query re-scored
@@ -143,6 +160,20 @@ host (`web: uvicorn api:app --host 0.0.0.0 --port $PORT`); on Railway,
 add a custom build command of `pip install -r requirements.txt &&
 python ingest.py` since it doesn't read `render.yaml`.
 
+**Fitting in 512MB.** Render's free instance caps memory at 512MiB, and
+the first deploy attempt blew through it: the logs showed repeated
+`No open ports detected, continuing to scan...` followed by
+`Out of memory (used over 512Mi)`. Both symptoms had one cause --
+`api.py` imports the retrieval pipeline, which imported PyTorch, so the
+process spent minutes loading a ~550MB dependency and got killed before
+uvicorn could bind `$PORT`. Running the embedding model on onnxruntime
+instead (see [Why local embeddings?](#how-it-works)) fixed it; the app
+now imports in ~2 seconds and binds immediately. Two things to expect
+even so: a free instance spins down when idle, so the first request
+after a pause waits ~50s for a cold start, and the ONNX model (~80MB)
+is downloaded during the build step by `python ingest.py` rather than
+on a visitor's first question.
+
 ## Contextual chunking (optional)
 
 Plain chunking throws away surrounding context: a chunk that says "The
@@ -207,6 +238,17 @@ This turns "did I make the retriever better?" from a guess into a
 number you can compare across chunk sizes, alpha values, or a future
 re-ranker.
 
+One lesson from actually running it: an LLM judge is still an LLM, and
+a single reply that isn't quite valid JSON used to abort a run
+partway through and throw away every question already scored. The
+judge call now hands a malformed reply back and asks it to fix itself
+before giving up (`src/eval_metrics.py`). Worth remembering that these
+scores carry real judge-to-judge variance -- when the ONNX embedding
+swap was measured, `context_precision` moved 0.82 -> 0.72 purely from
+judge noise, even though retrieval returned provably identical chunks.
+Treat small movements on an 8-question set as noise unless a
+deterministic check backs them up.
+
 ## Project layout
 
 ```
@@ -217,12 +259,13 @@ document-qa-rag/
 ├── eval/
 │   ├── dataset.json            # Q&A pairs with reference answers, for eval.py
 │   ├── last_run.json           # sample eval.py output (plain chunking)
-│   └── last_run_contextual.json # sample eval.py output (--contextual)
+│   ├── last_run_contextual.json # sample eval.py output (--contextual)
+│   └── last_run_onnx.json      # sample eval.py output (ONNX embeddings)
 ├── src/
 │   ├── chunking.py       # splits page text into overlapping chunks
 │   ├── contextualize.py  # optional: LLM-generated per-chunk context (ingest.py --contextual)
 │   ├── bm25.py            # BM25 keyword scoring, implemented from scratch
-│   ├── embeddings.py      # local dense embeddings (sentence-transformers)
+│   ├── embeddings.py      # local dense embeddings (all-MiniLM-L6-v2 on onnxruntime)
 │   ├── retrieval.py       # fuses BM25 candidates + Chroma's dense search into one ranking
 │   ├── store.py           # saves/loads the Chroma-backed index
 │   ├── generate.py        # calls Claude with retrieved context + citation rules
